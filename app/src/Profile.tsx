@@ -11,6 +11,7 @@ interface MetricSummary {
   lastValue: number;
   averageValue: number;
 }
+
 interface ProfileRun {
   timestamp: string;
   description: string;
@@ -30,8 +31,14 @@ export default function Profile() {
     <main>
       <Container className="py-5">
         <Row>
-          <h1>Profile at {profileRun?.timestamp}</h1>
-          <p className="lead">{profileRun?.description}</p>
+          <h1>
+            Profile run at{' '}
+            {profileRun && new Date(profileRun.timestamp).toLocaleString()}
+          </h1>
+          <p className="lead">
+            <strong>Change description: </strong>
+            {profileRun?.description}
+          </p>
         </Row>
       </Container>
       <Container>
@@ -62,6 +69,8 @@ function MetricsTable({ metrics }: { metrics: MetricSummary[] }) {
         <tr>
           <th>Name</th>
           <th>Value</th>
+          <th>Change from last</th>
+          <th>Change from average</th>
         </tr>
       </thead>
       <tbody>
@@ -81,9 +90,11 @@ function MetricRow({ metric }: { metric: MetricSummary }) {
   const { name, value, lastValue, averageValue } = metric;
   const tableStyle = getTableStyle(name, value);
   return (
-    <tr className={tableStyle}>
+    <tr>
       <td>{name}</td>
-      <td>{formatValue(name, value)}</td>
+      <td className={tableStyle}>{formatValue(name, value)}</td>
+      <td>{relativeChange(value, lastValue).toPrecision(2)}%</td>
+      <td>{relativeChange(value, averageValue).toPrecision(2)}%</td>
     </tr>
   );
 }
@@ -100,8 +111,8 @@ function getTableStyle(
 }
 
 function formatValue(name: string, value: number): string {
-  if (name.includes('Bytes')) {
-    return `${(value / 1_000_000).toPrecision(4)}MB/s`;
+  if (name.includes('MB/s')) {
+    return `${value}MB/s`;
   }
   if (name.includes('Time')) {
     return `${value.toPrecision(4)}ms`;
@@ -110,4 +121,8 @@ function formatValue(name: string, value: number): string {
     return `${value.toPrecision(4)}%`;
   }
   return value.toPrecision(4);
+}
+
+function relativeChange(value: number, lastValue: number): number {
+  return (value - lastValue) / lastValue;
 }

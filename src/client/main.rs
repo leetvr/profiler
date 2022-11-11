@@ -81,7 +81,9 @@ async fn save_profile_metrics(
         description,
         timestamp: start_time.timestamp_millis() as _,
     };
-    let _ = con.lpush(runs_key, serde_json::to_string(&summary)?).await?;
+    let _ = con
+        .lpush(runs_key, serde_json::to_string(&summary)?)
+        .await?;
 
     let summary_key = format!("profile_runs:{id}:summary");
     con.hset(&summary_key, "description", summary.description)
@@ -266,8 +268,16 @@ fn parse_gpu_metrics(output_string: &str) -> HashMap<String, Vec<f32>> {
             }
             // The name and the value are split by a : separator
             let mut split = metric.trim().split(":");
-            let name = split.next().unwrap().trim().to_string();
-            let value = split.next().unwrap().trim().parse::<f32>().unwrap();
+            let mut name = split.next().unwrap().trim().to_string();
+            let mut value = split.next().unwrap().trim().parse::<f32>().unwrap();
+
+            // Shennanigans
+            if name.contains("Bytes") {
+                let (actual_name, _) = name.split_once(" (Bytes").unwrap();
+                name = format!("{actual_name} (MB/s)");
+                value = (value as usize / 1_000_000) as f32;
+            }
+
             metrics.entry(name).or_default().push(value);
         }
     }

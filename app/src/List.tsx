@@ -54,7 +54,7 @@ function ProfileSummaryItem({
   return (
     <tr className={result ? 'table-success' : 'table-danger'}>
       <td>
-        <Link to={`profiles/${timestamp}`}>
+        <Link to={`profiles/${id}`}>
           {new Date(timestamp).toLocaleString()}
         </Link>
       </td>

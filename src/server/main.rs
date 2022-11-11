@@ -74,7 +74,7 @@ async fn get_profile_run(id: usize) -> Result<ProfileRun> {
         description,
         timestamp: timestamp.parse().unwrap(),
         metrics,
-        result: result.parse().unwrap(),
+        result: result != "0",
     })
 }
 
